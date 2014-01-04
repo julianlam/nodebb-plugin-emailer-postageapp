@@ -1,14 +1,15 @@
-var	PostageApp = require('postageapp')(),
-	fs = require('fs'),
+var	fs = require('fs'),
 	path = require('path'),
 
+	winston = module.parent.require('winston'),
 	Meta = module.parent.require('./meta'),
 
+	PostageApp = require('postageapp')(Meta.config['postageapp:apiKey']),
 	Emailer = {};
 
 Emailer.send = function(data) {
 	// Update the API key, if necessary
-	if (PostageApp.getApiKey() !== Meta.config['postageapp:apiKey']) {
+	if (PostageApp.getApiKey && PostageApp.setApiKey && PostageApp.getApiKey() !== Meta.config['postageapp:apiKey']) {
 		PostageApp.setApiKey(Meta.config['postageapp:apiKey']);
 	}
 
@@ -20,6 +21,11 @@ Emailer.send = function(data) {
 			'text/html': data.html,
 			'text/plain': data.plaintext
 		}
+	}, function() {
+		winston.info('[emailer.postageapp] Sent `' + data.template + '` email to uid ' + data.uid);
+	}, function(message) {
+		winston.warn('[emailer.postageapp] Unable to send `' + data.template + '` email to uid ' + data.uid + '!!');
+		winston.error('[emailer.postageapp] ' + message);
 	});
 }
 
