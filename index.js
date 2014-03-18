@@ -1,11 +1,50 @@
 var	fs = require('fs'),
 	path = require('path'),
 
+	async = module.parent.require('async'),
 	winston = module.parent.require('winston'),
 	Meta = module.parent.require('./meta'),
+	db = module.parent.require('./database'),
 
-	PostageApp = require('postageapp')(Meta.config['postageapp:apiKey']),
 	Emailer = {};
+	PostageApp = undefined,
+
+Emailer.init = function(app, middleware, controllers) {
+	function render(req, res, next) {
+		res.render('admin/plugins/emailer-postageapp', {});
+	}
+
+	// Check for migration possibility
+	async.waterfall([
+		function(next) {
+			db.getObjectField('config', 'postageapp:apiKey', next);
+		},
+		function(apiKey, next) {
+			if (apiKey !== null) {
+				db.setObjectField('settings:postageapp', 'apiKey', apiKey, next);
+			} else {
+				next(true);
+			}
+		},
+		function(status, next) {
+			db.deleteObjectField('config', 'postageapp:apiKey', next);
+		}
+	], function(err) {
+		if (!err) {
+			winston.info('===');
+			winston.info('PostageApp migration -- restarting for compatibility');
+			winston.info('===');
+			Meta.restart();
+		}
+	});
+
+	Meta.settings.getOne('postageapp', 'apiKey', function(err, apiKey) {
+		PostageApp = require('postageapp')(apiKey);
+	});
+
+	app.get('/admin/plugins/emailer-postageapp', middleware.admin.buildHeader, render);
+	app.get('/api/admin/plugins/emailer-postageapp', render);
+};
 
 Emailer.send = function(data) {
 	// Update the API key, if necessary
@@ -37,26 +76,7 @@ Emailer.admin = {
 			"name": 'Emailer (PostageApp)'
 		});
 
-		return custom_header;
-	},
-	route: function(custom_routes, callback) {
-		fs.readFile(path.join(__dirname, 'admin.tpl'), function(err, tpl) {
-			custom_routes.routes.push({
-				route: '/plugins/emailer-postageapp',
-				method: "get",
-				options: function(req, res, callback) {
-					callback({
-						req: req,
-						res: res,
-						route: '/plugins/emailer-postageapp',
-						name: 'Emailer (PostageApp)',
-						content: tpl
-					});
-				}
-			});
-
-			callback(null, custom_routes);
-		});
+		callback(null, custom_header);
 	}
 };
 

@@ -24,19 +24,25 @@
 
 <hr />
 
-<form role="form">
+<form role="form" class="postageapp-settings">
 	<fieldset>
 		<div class="form-group">
 			<label for="postageapp:apiKey">Project API Key</label>
-			<input type="text" class="form-control" id="postageapp:apiKey" data-field="postageapp:apiKey" />
+			<input type="text" class="form-control" id="postageapp:apiKey" name="apiKey" />
 		</div>
 
-		<button class="btn btn-lg btn-primary" id="save">Save</button>
+		<button type="button" class="btn btn-lg btn-primary" id="save">Save</button>
 	</fieldset>
 </form>
 
 <script type="text/javascript">
-	require(['forum/admin/settings'], function(Settings) {
-		Settings.prepare();
+	require(['settings'], function(Settings) {
+		Settings.load('postageapp', $('.postageapp-settings'));
+
+		$('#save').on('click', function() {
+			Settings.save('postageapp', $('.postageapp-settings'), function() {
+				socket.emit('admin.restart');
+			});
+		});
 	});
 </script>
