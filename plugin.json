@@ -9,5 +9,6 @@
         { "hook": "action:app.load", "method": "init" },
         { "hook": "action:email.send", "method": "send" },
         { "hook": "filter:admin.header.build", "method": "admin.menu" }
-    ]
+    ],
+    "minver": "0.4.0"
 }
