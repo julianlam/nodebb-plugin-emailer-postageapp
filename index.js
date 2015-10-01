@@ -46,7 +46,7 @@ Emailer.init = function(app, middleware, controllers) {
 	app.get('/api/admin/plugins/emailer-postageapp', render);
 };
 
-Emailer.send = function(data) {
+Emailer.send = function(data, callback) {
 	// Update the API key, if necessary
 	if (PostageApp.getApiKey && PostageApp.setApiKey && PostageApp.getApiKey() !== Meta.config['postageapp:apiKey']) {
 		PostageApp.setApiKey(Meta.config['postageapp:apiKey']);
@@ -62,9 +62,11 @@ Emailer.send = function(data) {
 		}
 	}, function() {
 		winston.info('[emailer.postageapp] Sent `' + data.template + '` email to uid ' + data.uid);
+		callback(null, data);
 	}, function(message) {
 		winston.warn('[emailer.postageapp] Unable to send `' + data.template + '` email to uid ' + data.uid + '!!');
 		winston.error('[emailer.postageapp] ' + message);
+		callback(null, data);
 	});
 }
 
