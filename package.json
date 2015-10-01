@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-emailer-postageapp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "An emailer plugin for NodeBB using PostageApp as a third party service",
   "main": "index.js",
   "repository": {
